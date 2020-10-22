@@ -13,6 +13,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <stdexcept>
+
 #include "meta/config.h"
 #include "meta/meta.h"
 #include "meta/sequence/observation.h"
