@@ -16,6 +16,8 @@
 #include "meta/util/random.h"
 #include "meta/util/traits.h"
 
+#include <stdexcept>
+
 namespace meta
 {
 namespace sequence

@@ -17,6 +17,8 @@
 #include "meta/util/identifiers.h"
 #include "meta/util/optional.h"
 
+#include <stdexcept>
+
 namespace meta
 {
 namespace sequence
