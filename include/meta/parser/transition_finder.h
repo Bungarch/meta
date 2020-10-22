@@ -11,8 +11,6 @@
 
 #include <vector>
 
-#include <stdexcept>
-
 #include "meta/config.h"
 #include "meta/parser/transition.h"
 #include "meta/parser/trees/visitors/visitor.h"

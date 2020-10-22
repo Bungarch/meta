@@ -47,7 +47,7 @@ class ranker_factory
             rnk.release();
             return std::unique_ptr<language_model_ranker>{der};
         }
-        throw std::invalid_argument{util::to_string(identifier)
+        throw std::invalid_argument{identifier.to_string()
                                     + " is not a language_model_ranker"};
     }
 

@@ -13,32 +13,31 @@
 #include "meta/config.h"
 #include "meta/hashing/hash.h"
 
-#if !META_HAS_STD_STRING_VIEW && !META_HAS_EXPERIMENTAL_STRING_VIEW
+#if META_HAS_EXPERIMENTAL_STRING_VIEW
+#include <experimental/string_view>
+namespace meta
+{
+namespace util
+{
+template <class Char, class Traits = std::char_traits<Char>>
+using basic_string_view = std::experimental::basic_string_view<Char, Traits>;
+
+using string_view = basic_string_view<char>;
+using u16string_view = basic_string_view<char16_t>;
+using u32string_view = basic_string_view<char32_t>;
+using wstring_view = basic_string_view<wchar_t>;
+}
+}
+#else
+
 #include <algorithm>
 #include <stdexcept>
 #include <string>
-#elif META_HAS_STRING_VIEW_HEADER
-#include <string_view>
-#elif META_HAS_EXPERIMENTAL_STRING_VIEW_HEADER
-#include <experimental/string_view>
-#endif
 
 namespace meta
 {
 namespace util
 {
-
-#if META_HAS_STD_STRING_VIEW
-
-template <class Char, class Traits = std::char_traits<Char>>
-using basic_string_view = std::basic_string_view<Char, Traits>;
-
-#elif META_HAS_EXPERIMENTAL_STRING_VIEW
-
-template <class Char, class Traits = std::char_traits<Char>>
-using basic_string_view = std::experimental::basic_string_view<Char, Traits>;
-
-#else
 
 /**
  * A non-owning reference to a string. I make no claims that this is
@@ -203,6 +202,19 @@ class basic_string_view
         using ::std::swap;
         swap(data_, s.data_);
         swap(size_, s.size_);
+    }
+
+    template <class Allocator>
+    explicit operator std::basic_string<Char, Traits, Allocator>() const
+    {
+        return {begin(), end()};
+    }
+
+    template <class Allocator = std::allocator<Char>>
+    std::basic_string<Char, Traits, Allocator> to_string(const Allocator& a
+                                                         = Allocator{}) const
+    {
+        return {begin(), end(), a};
     }
 
     size_type copy(Char* s, size_type n, size_type pos = 0) const
@@ -465,6 +477,11 @@ class basic_string_view
     size_type size_;
 };
 
+using string_view = basic_string_view<char>;
+using u16string_view = basic_string_view<char16_t>;
+using u32string_view = basic_string_view<char32_t>;
+using wstring_view = basic_string_view<wchar_t>;
+
 namespace detail
 {
 template <class Conv, class To, class T>
@@ -614,31 +631,33 @@ std::basic_ostream<Char, Traits>&
 operator<<(std::basic_ostream<Char, Traits>& os,
            basic_string_view<Char, Traits> str)
 {
-    os.write(str.data(), static_cast<std::streamsize>(str.length()));
-    return os;
+    return os << str.to_string();
+}
+}
 }
 
-#endif
-
-using string_view = basic_string_view<char>;
-using u16string_view = basic_string_view<char16_t>;
-using u32string_view = basic_string_view<char32_t>;
-using wstring_view = basic_string_view<wchar_t>;
-
-template <class Char, class Traits, class Allocator = std::allocator<Char>>
-std::basic_string<Char, Traits, Allocator>
-to_string(const basic_string_view<Char, Traits>& sv, Allocator a = Allocator{})
+namespace std
 {
-    return {sv.begin(), sv.end(), a};
+template <class Char, class Traits>
+struct hash<meta::util::basic_string_view<Char, Traits>>
+    : public meta::hashing::hash<>
+{
+};
 }
+#endif // !META_HAS_EXPERIMENTAL_STRING_VIEW
 
+namespace meta
+{
+
+namespace util
+{
 inline string_view make_string_view(std::string::const_iterator begin,
                                     std::string::const_iterator end)
 {
     return string_view{&*begin,
                        static_cast<string_view::size_type>(end - begin)};
 }
-} // namespace util
+}
 
 namespace hashing
 {
@@ -658,17 +677,6 @@ hash_append(HashAlgorithm& h, const util::basic_string_view<Char, Traits>& s)
         hash_append(h, c);
     hash_append(h, s.size());
 }
-} // namespace hashing
-} // namespace meta
-
-#if !META_HAS_STD_STRING_VIEW && !META_HAS_EXPERIMENTAL_STRING_VIEW
-namespace std
-{
-template <class Char, class Traits>
-struct hash<meta::util::basic_string_view<Char, Traits>>
-    : public meta::hashing::hash<>
-{
-};
-} // namespace std
-#endif
+}
+}
 #endif // META_UTIL_STRING_VIEW_H_

@@ -14,8 +14,6 @@
 #include "meta/util/comparable.h"
 #include "meta/util/optional.h"
 
-#include <stdexcept>
-
 namespace meta
 {
 namespace parser
